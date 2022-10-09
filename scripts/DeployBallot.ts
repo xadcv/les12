@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import * as dotenv from "dotenv";
-import { TokenizedBallot, MyToken } from "../typechain-types";
+import { TokenizedBallot__factory } from "../typechain-types";
 
 dotenv.config();
 
@@ -8,25 +8,27 @@ dotenv.config();
 
 const PROPOSALS = ["Group 1", "Group 6", "Group 3"];
 const propBytes = PROPOSALS.map((el) => ethers.utils.formatBytes32String(el));
+const TOKEN = '0xf12b227C76461F379f90801ebBd1B2Ec3cDe6CBD';
 
 async function main() {
 
 
-    const deployer = await ethers.getSigners();
+    const options = {
+        alchemy: process.env.ALCHEMY_API_KEY,
+        infura: process.env.INFURA_API_KEY
 
-    // Deploying the ERC20 token first
+    }
+    const provider = ethers.getDefaultProvider("goerli", options);
 
-    const myTokenContractFactory = await ethers.getContractFactory("MyToken");
-    const myTokenContract = await myTokenContractFactory.deploy();
-    await myTokenContract.deployed();
-    console.log(`MyToken contract was deployed at address ${myTokenContract.address}`);
+    const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
+
+    console.log(`Using address ${wallet.address}`);
+    const signer = wallet.connect(provider);
 
     // Deploying the TokenizedBallot contract second
 
-    const TokenizedBallotFactory = await ethers.getContractFactory("TokenizedBallot");
-    const tbDeploy = await TokenizedBallotFactory.deploy(propBytes, myTokenContract.address, 0);
-
-    const tokenizedBallot: TokenizedBallot = await tbDeploy.deployed()
+    const TokenizedBallotFactory = new TokenizedBallot__factory(signer);
+    const tokenizedBallot = await TokenizedBallotFactory.deploy(propBytes, TOKEN, 0);
 
     console.log(`Tokenized ballot deployed at ${tokenizedBallot.address}`)
 
