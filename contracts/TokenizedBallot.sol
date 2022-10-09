@@ -15,6 +15,8 @@ contract TokenizedBallot {
     }
     Proposal[] public proposals;
 
+    mapping(address => uint256) public votingPowerSpent;
+
     constructor(
         bytes32[] memory proposalNames,
         address _tokenContract,
@@ -28,14 +30,23 @@ contract TokenizedBallot {
     }
 
     function vote(uint256 proposal, uint256 amount) public {
-        uint256 votingPower = votingPower(msg.sender);
-        require(votingPower >= amount, "Must be higher than amount");
+        uint256 _votingPower = votingPower(msg.sender);
+        require(
+            _votingPower >= amount,
+            "TokenizedBallot: trying to vote more than the voting power available"
+        );
         votingPowerSpent[msg.sender] += amount;
         proposals[proposal].voteCount += amount;
     }
 
-    function votingPower(address account) public view returns (uint256 votingPower_) {
-        votingPower_ = tokenContract.getPastVotes()
+    function votingPower(address account)
+        public
+        view
+        returns (uint256 votingPower_)
+    {
+        votingPower_ =
+            tokenContract.getPastVotes(account, 0) -
+            votingPowerSpent[msg.sender];
     }
 
     function winningProposal() public view returns (uint256 winningProposal_) {

@@ -4,6 +4,7 @@ dotenv.config();
 
 const TOKEN_MINT = ethers.utils.parseEther("2");
 
+
 async function main() {
     const [deployer, acc1, acc2] = await ethers.getSigners();
     const myTokenContractFactory = await ethers.getContractFactory("MyToken");
