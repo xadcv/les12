@@ -46,7 +46,7 @@ contract TokenizedBallot {
     {
         votingPower_ =
             tokenContract.getPastVotes(account, 0) -
-            votingPowerSpent[msg.sender];
+            votingPowerSpent[account];
     }
 
     function winningProposal() public view returns (uint256 winningProposal_) {
