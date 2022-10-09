@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "./tasks/TokenizedBallot"
 
 const config: HardhatUserConfig = {
     paths: { tests: "tests" },
