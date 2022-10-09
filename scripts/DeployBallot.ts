@@ -35,7 +35,7 @@ async function main() {
     // give voting tokens
     // delegating voting power
     // casting votes
-    //checking vote power
+    // checking vote power
     // and querying results
 
 

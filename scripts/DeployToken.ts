@@ -34,7 +34,10 @@ async function main() {
     console.log(`Token contract deployed to ${tokenContract.address}`);
 
     VOTERS.forEach(async voter => {
-        tokenContract.mint(voter, 1);
+        await tokenContract.mint(voter, ethers.utils.parseEther("1"));
+    });
+
+    VOTERS.forEach(async voter => {
         let balance = await tokenContract.balanceOf(voter);
         console.log(`${voter} has a balance of ${balance}`)
     });
