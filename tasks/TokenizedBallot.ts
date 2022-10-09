@@ -85,3 +85,26 @@ task("ballot", "Deploy an instance of Tokenized Ballot with default Proposal Nam
 
 
     });
+
+task("vote", "Vote on a proposal number for the provided tokenized ballot contract")
+    .addPositionalParam("ballotContract")
+    .addPositionalParam("proposalNumber")
+    .addPositionalParam("votingAmount")
+    .setAction(async (taskArgs) => {
+
+        const provider = ethers.getDefaultProvider("goerli", options);
+
+        const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
+
+        console.log(`Using address ${wallet.address}`);
+        const signer = wallet.connect(provider);
+
+        const ballot = new TokenizedBallot__factory(signer).attach(taskArgs.ballotContract);
+
+        const tx = await ballot.vote(taskArgs.proposalNumber, ethers.utils.parseEther(taskArgs.votingAmount));
+
+        console.log({ tx: tx });
+        const receipt = await tx.wait();
+        console.log({ receipt: receipt });
+
+    })
