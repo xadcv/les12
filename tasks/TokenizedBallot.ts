@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
-import { MyToken__factory } from "../typechain-types";
+import { MyToken__factory, TokenizedBallot__factory } from "../typechain-types";
 import { task } from "hardhat/config";
 
 dotenv.config();
@@ -64,4 +64,24 @@ task("mint", "Mint token to provided addresses")
 
     });
 
+task("ballot", "Deploy an instance of Tokenized Ballot with default Proposal Names and reference block 0")
+    .addPositionalParam("tokenContract")
+    .setAction(async (taskArgs) => {
+        const PROPOSALS = ["Chocolate", "Vanilla", "Pistachio"];
+        const propBytes = PROPOSALS.map((el) => ethers.utils.formatBytes32String(el));
 
+        const provider = ethers.getDefaultProvider("goerli", options);
+
+        const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
+
+        console.log(`Using address ${wallet.address}`);
+        const signer = wallet.connect(provider);
+
+        const ballotFactory = new TokenizedBallot__factory(signer);
+        const ballot = await ballotFactory.deploy(propBytes, taskArgs.tokenContract, 0);
+        await ballot.deployed();
+
+        console.log(`Ballot contract deployed to ${ballot.address}`);
+
+
+    });
