@@ -150,3 +150,16 @@ task(
     const receipt = await tx.wait();
     logResult(receipt);
   });
+
+  task(
+    "getwinner",
+    "Get a winning proposal name from a byte32 parameter"
+  )
+    .addPositionalParam("ballotContract")
+    .setAction(async (taskArgs) => {
+
+        const ballot = ballotFactory.attach(taskArgs.ballotContract);
+        const tx = await ballot.winnerName();
+        console.log(ethers.utils.parseBytes32String(tx))
+    });
+  
