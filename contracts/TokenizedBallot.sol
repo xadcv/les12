@@ -45,7 +45,7 @@ contract TokenizedBallot {
         returns (uint256 votingPower_)
     {
         votingPower_ =
-            tokenContract.getPastVotes(account, referenceBlock) -
+            tokenContract.getPastVotes(account, 0) -
             votingPowerSpent[msg.sender];
     }
 
