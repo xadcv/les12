@@ -18,7 +18,7 @@ if (process.env.WALLET_PRIVATE_KEY != undefined) {
 } else {
   throw new Error("WALLET_PRIVATE_KEY or MNEMONIC is needed.");
 }
-console.log(`Using address ${wallet.address}`);
+console.log(`Using Signer address ${wallet.address}`);
 let signer = wallet.connect(provider);
 let tokenFactory = new MyToken__factory(signer);
 let ballotFactory = new TokenizedBallot__factory(signer);
@@ -31,6 +31,7 @@ const logResult = (receipt: ethers.ContractReceipt) => {
     )} GoerliETH`
   );
 };
+
 /*
 deploy a token
 */
@@ -42,7 +43,7 @@ task("token", "Deploy a new instance of the token").setAction(async () => {
 
 /*
     @param contractAddress: address of the token
-    @param destinationAddress: address to mint tokens to 
+    @param destinationAddress: address to mint tokens to
     @param mintAmount: number of tokens to mint in human readable numbers
 */
 task("mint", "Mint token to provided addresses")
@@ -61,7 +62,7 @@ task("mint", "Mint token to provided addresses")
     const token = tokenFactory.attach(taskArgs.contractAddress);
     const tx = await token.mint(
       taskArgs.destinationAddress,
-      ethers.utils.parseEther(taskArgs.mintAmount)
+      taskArgs.mintAmount
     );
 
     const receipt = await tx.wait();
@@ -74,6 +75,7 @@ task(
 )
   .addPositionalParam("tokenContract")
   .setAction(async (taskArgs) => {
+    const latestBlock = (await provider.getBlock("latest")).number - 1;
     const PROPOSALS = ["Chocolate", "Vanilla", "Pistachio"];
     const propBytes = PROPOSALS.map((el) =>
       ethers.utils.formatBytes32String(el)
@@ -82,10 +84,52 @@ task(
     const ballot = await ballotFactory.deploy(
       propBytes,
       taskArgs.tokenContract,
-      0
+      latestBlock
     );
 
     console.log(`Ballot contract deployed to ${ballot.address}`);
+  });
+
+task("delegate", "delegate vote from signer to delegatee")
+  .addPositionalParam("tokenContract")
+  .addPositionalParam("delegatee")
+  .setAction(async (taskArgs) => {
+    // approve tokenSale contract to use voting power
+    const token = tokenFactory.attach(taskArgs.tokenContract);
+    // const approveTx = await token.approve(
+    //   taskArgs.ballotContract,
+    //   taskArgs.voteAmount
+    // );
+    // await approveTx.wait();
+
+    // delegate voting to delegatee
+    const delegateTx = await token.delegate(taskArgs.delegatee);
+    const receipt = await delegateTx.wait();
+    logResult(receipt);
+  });
+
+task("getvotingpower", "get voting power of a specific address")
+  .addPositionalParam("tokenContract")
+  .addPositionalParam("voterAddress")
+  .setAction(async (taskArgs) => {
+    // approve tokenSale contract to use voting power
+    const token = tokenFactory.attach(taskArgs.tokenContract);
+    // const approveTx = await token.approve(
+    //   taskArgs.ballotContract,
+    //   taskArgs.voteAmount
+    // );
+    // await approveTx.wait();
+
+    // get current votes balance
+    const getVotesTx = await token.getVotes(taskArgs.voterAddress);
+    console.log(getVotesTx.toString());
+
+    // get past votes at latest block
+    const getPastVotesTx = await token.getPastVotes(
+      taskArgs.voterAddress,
+      (await provider.getBlock("latest")).number - 1
+    );
+    console.log(getPastVotesTx.toString());
   });
 
 task(
@@ -100,7 +144,7 @@ task(
 
     const tx = await ballot.vote(
       taskArgs.proposalNumber,
-      ethers.utils.parseEther(taskArgs.votingAmount)
+      taskArgs.votingAmount
     );
 
     const receipt = await tx.wait();
